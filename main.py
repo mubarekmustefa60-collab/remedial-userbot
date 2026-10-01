@@ -1,7 +1,21 @@
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from flask import Flask
+from threading import Thread
 
+# Flask ሰርቨር ለ Render ዌብ ሰርቪስ (ፖርት እንዲያገኝ)
+app_flask = Flask(__name__)
+
+@app_flask.route('/')
+def home():
+    return "Remedial UserBot is running!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app_flask.run(host="0.0.0.0", port=port)
+
+# የቴሌግራም UserBot ማዋቀሪያ
 API_ID = int(os.environ.get("API_ID", 1234567))
 API_HASH = os.environ.get("API_HASH", "your_api_hash_here")
 SESSION_STRING = os.environ.get("SESSION_STRING", "")
@@ -37,4 +51,8 @@ async def download_handler(client: Client, message: Message):
         except Exception as e:
             await message.reply(f"❌ ስህተት አጋጥሟል: {str(e)}")
 
-app.run()
+# ዌብ ሰርቨሩን እና ቦቱን በአንድ ላይ ማስጀመር
+if __name__ == "__main__":
+    t = Thread(target=run_flask)
+    t.start()
+    app.run()
