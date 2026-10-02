@@ -29,24 +29,29 @@ async def download_handler(event):
     if "t.me/" in text:
         try:
             status_msg = await event.reply("⏳ ፋይሉን በማውረድ ላይ ነው...")
-            parts = text.split("/")
-            msg_id = int(parts[-1])
+            
+            # የሊንክ ክፍሎችን በትክክል መለየት (Topics/Forums ጭምር ለማንበብ)
+            parts = [p for p in text.strip().split("/") if p]
+            msg_id = int(parts[-1])  # የመጨረሻው ቁጥር የሜሴጁ ID ነው
             
             if "c" in parts:
-                chat_id = int("-100" + parts[-2])
+                c_index = parts.index("c")
+                raw_chat_id = parts[c_index + 1]
+                chat_id = int("-100" + raw_chat_id)
             else:
                 chat_id = parts[-2]
 
             target_msg = await client.get_messages(chat_id, ids=msg_id)
             
-            if target_msg and target_msg.media:
+            if target_msg and (target_msg.media or target_msg.file):
                 file_path = await target_msg.download_media()
                 await client.send_file(
                     event.chat_id,
                     file_path,
                     caption="✅ የተጠየቀው ማቴሪያል ተወርዷል!"
                 )
-                os.remove(file_path)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
                 await status_msg.delete()
             else:
                 await status_msg.edit("⚠️ በዚህ ሊንክ ውስጥ ፋይል አልተገኘም!")
