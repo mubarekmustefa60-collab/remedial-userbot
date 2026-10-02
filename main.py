@@ -1,9 +1,14 @@
 import os
 import asyncio
+from threading import Thread
+from flask import Flask
+
+# 1. Pyrogram Event Loop እንዲያገኝ ቀድመን Loop እንፈጥራለን
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from flask import Flask
-from threading import Thread
 
 # Flask ሰርቨር ለ Render ዌብ ሰርቪስ
 app_flask = Flask(__name__)
@@ -52,16 +57,16 @@ async def download_handler(client: Client, message: Message):
         except Exception as e:
             await message.reply(f"❌ ስህተት አጋጥሟል: {str(e)}")
 
-async def main():
+async def start_services():
+    # Flask Background Thread ሆኖ እንዲሰራ ማስጀመር
     t = Thread(target=run_flask)
     t.daemon = True
     t.start()
     
+    # Pyrogram Bot ማስጀመር
     await app.start()
     print("✅ ቦቱ በተሳካ ሁኔታ ስራ ጀምሯል!")
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
+    loop.run_until_complete(start_services())
